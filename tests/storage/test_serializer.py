@@ -1,3 +1,6 @@
+import pytest
+
+from gitter.storage.exceptions import SerializationError
 from gitter.storage.serializer import serialize_dict, deserialize_dict
 
 
@@ -15,3 +18,14 @@ def test_serializer_deterministic_order():
     data2 = {"b": 2, "a": 1}
 
     assert serialize_dict(data1) == serialize_dict(data2)
+
+def test_serialize_invalid_object_raises():
+    class Bad:
+        pass
+
+    with pytest.raises(SerializationError):
+        serialize_dict({"bad": Bad()})
+
+def test_deserialize_invalid_json_raises():
+    with pytest.raises(SerializationError):
+        deserialize_dict(b"{invalid json")

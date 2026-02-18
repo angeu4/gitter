@@ -1,5 +1,8 @@
 from pathlib import Path
 
+import pytest
+
+from gitter.storage.exceptions import ObjectStoreError
 from gitter.objects.blob import Blob
 from gitter.storage.object_store import ObjectStore
 
@@ -21,3 +24,10 @@ def test_store_same_object_same_hash(tmp_path):
 
     assert store.store(blob1) == store.store(blob2)
 
+def test_object_store_wraps_os_error(tmp_path):
+    store = ObjectStore(tmp_path)
+
+    store.objects_path.chmod(0o400)
+
+    with pytest.raises(ObjectStoreError):
+        store.store(Blob(b"hello"))

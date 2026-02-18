@@ -30,3 +30,6 @@ Pull requests
 ## Storage Layer
 Implements content-addressable object storage using SHA1 hashing.
 Supports Blob, Tree and Commit object primitives.
+
+## Repository Metadata Layer
+Implements repository filesystem layout, HEAD pointer management and branch reference storage.

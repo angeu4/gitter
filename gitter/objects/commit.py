@@ -2,6 +2,16 @@ from .base import GitterObject
 
 
 class Commit(GitterObject):
+    """
+    Represents repository snapshot metadata.
+
+    Stores:
+    - Root tree hash
+    - Parent commit reference
+    - Author metadata
+    - Timestamp
+    - Commit message
+    """
 
     def __init__(self, tree_hash, parent_hash, message, author, timestamp):
         self.tree_hash = tree_hash
