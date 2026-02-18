@@ -26,3 +26,7 @@ CI runs automatically on:
 Push to main
 Push to development
 Pull requests
+
+## Storage Layer
+Implements content-addressable object storage using SHA1 hashing.
+Supports Blob, Tree and Commit object primitives.
