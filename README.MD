@@ -12,3 +12,17 @@ pip install -r requirements-dev.txt
 
 ## Run Tests
 pytest
+
+
+## Continuous Integration
+The project uses GitHub Actions to enforce quality gates on every push and pull request.
+
+Checks Included:
+Ruff → Linting and code quality
+Bandit → Security scanning
+Pytest → Test execution
+
+CI runs automatically on:
+Push to main
+Push to development
+Pull requests
