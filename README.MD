@@ -42,5 +42,3 @@ Implements staging area abstraction with deterministic persistence.
 - Bandit — Security scanning
 - Pytest — Unit tests
 - Coverage enforced at ≥90%
-
-![Coverage](https://codecov.io/gh/angeu4/gitter/branch/main/graph/badge.svg)

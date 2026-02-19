@@ -1,0 +1,90 @@
+import sys
+import pytest
+
+from gitter.cli.main import main
+
+
+def run_cli(monkeypatch, args):
+    monkeypatch.setattr(sys, "argv", ["gitter"] + args)
+    with pytest.raises(SystemExit) as exc:
+        main()
+    return exc.value.code
+
+
+def test_init_creates_repo(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = run_cli(monkeypatch, ["init"])
+
+    assert exit_code == 0
+    assert (tmp_path / ".gitter").exists()
+
+
+def test_add_without_repo_fails(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = run_cli(monkeypatch, ["add", "file.txt"])
+
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "Not a gitter repository" in captured.out
+
+
+def test_commit_without_staging(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+
+    run_cli(monkeypatch, ["init"])
+
+    exit_code = run_cli(monkeypatch, ["commit", "-m", "msg"])
+
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "Nothing to commit" in captured.out
+
+
+def test_unknown_command(monkeypatch, capsys):
+    exit_code = run_cli(monkeypatch, ["unknown"])
+
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "Unknown command" in captured.out
+
+
+def test_missing_commit_message(monkeypatch, capsys):
+    exit_code = run_cli(monkeypatch, ["commit"])
+
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "Usage" in captured.out
+
+def test_full_add_and_commit_flow(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+
+    # init
+    run_cli(monkeypatch, ["init"])
+
+    # create file
+    file = tmp_path / "file.txt"
+    file.write_text("hello")
+
+    # add
+    exit_code = run_cli(monkeypatch, ["add", "file.txt"])
+    assert exit_code == 0
+
+    # commit
+    exit_code = run_cli(monkeypatch, ["commit", "-m", "initial"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Committed as" in captured.out
+
+def test_no_args_prints_banner(monkeypatch, capsys):
+    exit_code = run_cli(monkeypatch, [])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Gitter CLI" in captured.out
