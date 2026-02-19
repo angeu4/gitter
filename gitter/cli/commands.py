@@ -101,8 +101,9 @@ def commit_command(args):
 
 def status_command(args):
     """
-    Show repository status.
+    Display repository status with strict formatting compliance.
     """
+
     try:
         repo_root = find_repo_root(Path.cwd())
     except RepoNotFoundError:
@@ -111,24 +112,31 @@ def status_command(args):
     service = RepositoryService(repo_root)
     status = service.get_status()
 
-    output_lines = []
+    staged = status.get("staged", [])
+    modified = status.get("modified", [])
+    untracked = status.get("untracked", [])
 
-    if status["staged"]:
-        output_lines.append("Staged:")
-        output_lines.extend(f"  {f}" for f in status["staged"])
+    lines = []
 
-    if status["modified"]:
-        output_lines.append("Modified:")
-        output_lines.extend(f"  {f}" for f in status["modified"])
+    if staged:
+        lines.append("Changes to be committed:")
+        for path in staged:
+            lines.append(f"  {path}")
 
-    if status["untracked"]:
-        output_lines.append("Untracked:")
-        output_lines.extend(f"  {f}" for f in status["untracked"])
+    if modified:
+        lines.append("Changes not staged for commit:")
+        for path in modified:
+            lines.append(f"  {path}")
 
-    if not output_lines:
-        output_lines.append("Working tree clean")
+    if untracked:
+        lines.append("Untracked files:")
+        for path in untracked:
+            lines.append(f"  {path}")
 
-    return 0, "\n".join(output_lines)
+    if not lines:
+        return 0, "Working tree clean"
+
+    return 0, "\n".join(lines)
 
 
 def log_command(args):
