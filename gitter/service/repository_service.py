@@ -5,7 +5,9 @@ from gitter.objects.blob import Blob
 from gitter.objects.tree import Tree
 from gitter.objects.commit import Commit
 
+from gitter.storage.hashing import sha1_hash
 from gitter.storage.object_store import ObjectStore
+from gitter.storage.serializer import serialize_dict, deserialize_dict
 from gitter.repository.layout import RepoLayout
 from gitter.repository.refs import Refs
 from gitter.repository.head import Head
@@ -165,3 +167,76 @@ class RepositoryService:
             raise HeadError("Invalid HEAD format")
 
         return ref.split("/")[-1]
+
+    # ------------------------------------------------------------------
+    # Status
+    # ------------------------------------------------------------------
+
+    def get_status(self):
+        """
+        Compute repository status.
+
+        Returns:
+            dict with keys:
+                - staged
+                - modified
+                - untracked
+        """
+
+        index = self.index_store.load()
+
+        staged = set(index.entries.keys())
+        modified = set()
+        untracked = set()
+
+        # Load HEAD tree if exists
+        tracked = {}
+
+        try:
+            branch = self._get_current_branch_name()
+            commit_hash = self.refs.get_branch(branch)
+
+            if commit_hash:
+                commit_data = self.object_store.objects_path / commit_hash
+                commit_dict = deserialize_dict(commit_data.read_bytes())
+                tree_hash = commit_dict["tree"]
+
+                tree_data = self.object_store.objects_path / tree_hash
+                tree_dict = deserialize_dict(tree_data.read_bytes())
+
+                tracked = tree_dict.get("entries", {})
+        except Exception:
+            tracked = {}
+
+        for path in self.repo_root.rglob("*"):
+            if path.is_dir():
+                continue
+
+            if ".gitter" in path.parts:
+                continue
+
+            relative_path = str(path.relative_to(self.repo_root))
+
+            current_content = path.read_bytes()
+
+            blob_data = {
+                "type": "blob",
+                "content": current_content.decode("utf-8"),
+            }
+            blob_hash = sha1_hash(serialize_dict(blob_data))
+
+            if relative_path in staged:
+                if blob_hash != index.entries[relative_path]:
+                    modified.add(relative_path)
+            elif relative_path in tracked:
+                if blob_hash != tracked[relative_path]:
+                    modified.add(relative_path)
+            else:
+                untracked.add(relative_path)
+
+        return {
+            "staged": sorted(staged),
+            "modified": sorted(modified),
+            "untracked": sorted(untracked),
+        }
+

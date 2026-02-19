@@ -19,6 +19,12 @@ COMMAND_REGISTRY = {
         "usage": "gitter commit -m <message>",
         "description": "Create a commit from staged files",
     },
+    "status": {
+        "handler": commands.status_command,
+        "usage": "gitter status",
+        "description": "Show repository status",
+    },
+
 }
 
 

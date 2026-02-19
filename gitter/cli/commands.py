@@ -66,3 +66,35 @@ def commit_command(args):
         return 1, "Nothing to commit"
 
     return 0, f"Committed as {commit_hash}"
+
+
+def status_command(args):
+    """
+    Show repository status.
+    """
+    try:
+        repo_root = find_repo_root(Path.cwd())
+    except RepoNotFoundError:
+        return 1, "Not a gitter repository"
+
+    service = RepositoryService(repo_root)
+    status = service.get_status()
+
+    output_lines = []
+
+    if status["staged"]:
+        output_lines.append("Staged:")
+        output_lines.extend(f"  {f}" for f in status["staged"])
+
+    if status["modified"]:
+        output_lines.append("Modified:")
+        output_lines.extend(f"  {f}" for f in status["modified"])
+
+    if status["untracked"]:
+        output_lines.append("Untracked:")
+        output_lines.extend(f"  {f}" for f in status["untracked"])
+
+    if not output_lines:
+        output_lines.append("Working tree clean")
+
+    return 0, "\n".join(output_lines)
