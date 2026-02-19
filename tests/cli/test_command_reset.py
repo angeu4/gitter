@@ -47,3 +47,24 @@ def test_reset_beyond_initial(tmp_path, monkeypatch, run_cli):
 
     exit_code = run_cli(monkeypatch, ["reset", "HEAD~1"])
     assert exit_code == 1
+
+
+def test_reset_status_regex(monkeypatch, capsys, run_cli, tmp_path):
+    monkeypatch.chdir(tmp_path)
+
+    run_cli(monkeypatch, ["init"])
+    capsys.readouterr()
+
+    (tmp_path / "file.md").write_text("x")
+    run_cli(monkeypatch, ["add", "*.md"])
+    run_cli(monkeypatch, ["commit", "-m", "adds file"])
+    capsys.readouterr()
+
+    run_cli(monkeypatch, ["reset", "HEAD~1"])
+    capsys.readouterr()
+
+    _ = run_cli(monkeypatch, ["status"])
+    captured = capsys.readouterr()
+
+    assert captured.out == "Working tree clean\n"
+

@@ -71,3 +71,40 @@ def test_log_multiple_commits(tmp_path, monkeypatch, capsys, run_cli):
 
     # second should appear before first
     assert output.index("second") < output.index("first")
+
+
+def test_log_regex(monkeypatch, capsys, run_cli, tmp_path):
+    monkeypatch.chdir(tmp_path)
+
+    run_cli(monkeypatch, ["init"])
+    capsys.readouterr()
+
+    (tmp_path / "file.md").write_text("x")
+    run_cli(monkeypatch, ["add", "*.md"])
+    run_cli(monkeypatch, ["commit", "-m", "adds file"])
+    capsys.readouterr()
+
+    _ = run_cli(monkeypatch, ["log"])
+    captured = capsys.readouterr()
+
+    pattern = (
+        r"^commit\s+([0-9a-f]{40})(?:\s*//.*)?\s*\r?\n"
+        r"Author:\s*(.*?)\s*\r?\n"
+        r"Date:\s*(.*?)\s*\r?\n"
+        r"\r?\n"
+        r"([\s\S]*?)(?=^commit\s+[0-9a-f]{40}|\Z)"
+    )
+
+    assert re.search(pattern, captured.out, re.MULTILINE)
+
+
+def test_log_empty_regex(monkeypatch, capsys, run_cli, tmp_path):
+    monkeypatch.chdir(tmp_path)
+
+    run_cli(monkeypatch, ["init"])
+    capsys.readouterr()
+
+    _ = run_cli(monkeypatch, ["log"])
+    captured = capsys.readouterr()
+
+    assert captured.out == ""

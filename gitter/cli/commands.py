@@ -12,11 +12,23 @@ def init_command(args):
     """
     Initialize a new Gitter repository.
     """
-    layout = RepoLayout(Path.cwd())
+
+    repo_root = Path.cwd()
+    layout = RepoLayout(repo_root)
+    gitter_dir = layout.gitter_dir
+
+    if gitter_dir.exists():
+        path_str = str(gitter_dir.resolve()) + "/"
+        return 0, f"Gitter repository is already initialised in {path_str}"
+
+    # Create directory structure
     layout.ensure_exists()
+
+    # Create default config
     RepoConfig(layout.config_file).write_default()
 
-    return 0, "Initialized empty Gitter repository"
+    path_str = str(gitter_dir.resolve()) + "/"
+    return 0, f"Initialized empty Gitter repository in {path_str}"
 
 
 def add_command(args):
@@ -102,7 +114,7 @@ def commit_command(args):
 
 def status_command(args):
     """
-    Display repository status with strict formatting compliance.
+    Display repository status in strict format.
     """
 
     try:
@@ -113,31 +125,48 @@ def status_command(args):
     service = RepositoryService(repo_root)
     status = service.get_status()
 
-    staged = status.get("staged", [])
-    modified = status.get("modified", [])
-    untracked = status.get("untracked", [])
+    staged = status["staged"]
+    modified = status["modified"]
+    untracked = status["untracked"]
 
     lines = []
 
+    if not staged and not modified and not untracked:
+        return 0, "Working tree clean"
+
+    # -------------------------
+    # Staged
+    # -------------------------
     if staged:
         lines.append("Changes to be committed:")
-        for path in staged:
-            lines.append(f"  {path}")
+        for file in staged:
+            lines.append(f"    new file: {file}")
+        if modified or untracked:
+            lines.append("")
 
+    # -------------------------
+    # Modified
+    # -------------------------
     if modified:
         lines.append("Changes not staged for commit:")
-        for path in modified:
-            lines.append(f"  {path}")
+        for file in modified:
+            lines.append(f"    modified: {file}")
+        if untracked:
+            lines.append("")
 
+    # -------------------------
+    # Untracked
+    # -------------------------
     if untracked:
         lines.append("Untracked files:")
-        for path in untracked:
-            lines.append(f"  {path}")
+        for file in untracked:
+            lines.append(f"    {file}")
 
     if not lines:
         return 0, "Working tree clean"
 
     return 0, "\n".join(lines)
+
 
 
 def log_command(args):
@@ -242,17 +271,52 @@ def help_command(args):
     Display help information with strict formatting compliance.
     """
 
-    commands = {
-        "add": "Usage: gitter add <file|pattern>",
-        "branch": "Usage: gitter branch [<name>]",
-        "checkout": "Usage: gitter checkout <branch>",
-        "commit": "Usage: gitter commit -m <message> [-m <message>] [-a]",
-        "init": "Usage: gitter init",
-        "log": "Usage: gitter log",
-        "reset": "Usage: gitter reset HEAD~<n>",
-        "status": "Usage: gitter status",
-        "help": "Usage: gitter help [command]",
+    command_meta = {
+        "init": {
+            "description": "Initialize a new repository",
+            "usage": "gitter init",
+        },
+        "add": {
+            "description": "Stage files",
+            "usage": "gitter add <file|pattern>",
+        },
+        "commit": {
+            "description": "Create a commit from staged files",
+            "usage": "gitter commit -m <message> [-m <message>] [-a]",
+            "options": [
+                "-m <message>   Commit message",
+                "-a             Auto stage tracked changes",
+            ],
+        },
+        "status": {
+            "description": "Show repository status",
+            "usage": "gitter status",
+        },
+        "log": {
+            "description": "Show commit history",
+            "usage": "gitter log",
+        },
+        "branch": {
+            "description": "List or create branches",
+            "usage": "gitter branch [<name>]",
+        },
+        "reset": {
+            "description": "Reset to previous revision",
+            "usage": "gitter reset HEAD~<n>",
+        },
+        "checkout": {
+            "description": "Switch branches",
+            "usage": "gitter checkout <branch>",
+        },
+        "help": {
+            "description": "Show help information",
+            "usage": "gitter help [command]",
+        },
     }
+
+    # ------------------------------------------------------------------
+    # Global help
+    # ------------------------------------------------------------------
 
     if not args:
         lines = [
@@ -261,17 +325,42 @@ def help_command(args):
             "Available commands:",
         ]
 
-        for name in sorted(commands.keys()):
+        for name in sorted(command_meta.keys()):
             lines.append(f"  {name}")
 
         return 0, "\n".join(lines)
 
+    # ------------------------------------------------------------------
+    # Command-specific help
+    # ------------------------------------------------------------------
+
     command = args[0]
 
-    if command not in commands:
+    if command not in command_meta:
         return 1, "Unknown command"
 
-    return 0, commands[command]
+    meta = command_meta[command]
+
+    lines = []
+
+    lines.append("NAME:")
+    lines.append(f"    gitter {command} - {meta['description']}")
+    lines.append("")
+
+    lines.append("SYNOPSIS:")
+    lines.append(f"    {meta['usage']}")
+    lines.append("")
+
+    lines.append("DESCRIPTION:")
+    lines.append(f"    {meta['description']}")
+
+    if "options" in meta:
+        lines.append("")
+        lines.append("OPTIONS:")
+        for opt in meta["options"]:
+            lines.append(f"    {opt}")
+
+    return 0, "\n".join(lines)
 
 
 def checkout_command(args):

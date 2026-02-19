@@ -38,3 +38,22 @@ def test_full_add_and_commit_flow(tmp_path, monkeypatch, capsys, run_cli):
 
     assert exit_code == 0
     assert "Committed as" in captured.out
+
+def test_commit_status_regex(monkeypatch, capsys, run_cli, tmp_path):
+    monkeypatch.chdir(tmp_path)
+
+    run_cli(monkeypatch, ["init"])
+    capsys.readouterr()
+
+    (tmp_path / "file.txt").write_text("x")
+
+    run_cli(monkeypatch, ["add", "*.txt"])
+    capsys.readouterr()
+
+    run_cli(monkeypatch, ["commit", "-m", "adds file"])
+    capsys.readouterr()
+
+    _ = run_cli(monkeypatch, ["status"])
+    captured = capsys.readouterr()
+
+    assert captured.out == "Working tree clean\n"
