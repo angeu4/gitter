@@ -88,7 +88,10 @@ def main():
     handler = meta["handler"]
 
     exit_code, message = handler(args[1:])
-    print(message)
+    
+    if message:
+        print(message)
+    
     sys.exit(exit_code)
 
 

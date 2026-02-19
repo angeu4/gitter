@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 from gitter.repository.layout import RepoLayout
@@ -141,8 +142,9 @@ def status_command(args):
 
 def log_command(args):
     """
-    Show commit history.
+    Display commit history in strict format compliance.
     """
+
     try:
         repo_root = find_repo_root(Path.cwd())
     except RepoNotFoundError:
@@ -152,17 +154,32 @@ def log_command(args):
     commits = service.get_log()
 
     if not commits:
-        return 0, "No commits yet"
+        return 0, ""
 
     lines = []
 
     for commit in commits:
-        lines.append(f"commit {commit['hash']}")
-        lines.append(f"Author: {commit['author']}")
-        lines.append(f"Message: {commit['message']}")
-        lines.append("")
+        commit_hash = commit["hash"]
+        author = commit["author"]
+        timestamp = commit["timestamp"]
+        message = commit["message"]
 
-    return 0, "\n".join(lines).strip()
+        formatted_date = datetime.fromtimestamp(timestamp).strftime(
+            "%a %b %d %H:%M:%S %Y"
+        )
+
+        lines.append(f"commit {commit_hash}")
+        lines.append(f"Author: {author}")
+        lines.append(f"Date:   {formatted_date}")
+        lines.append("")
+        lines.append(f"    {message}")
+
+        # Separate commits with blank line (except last)
+        if commit != commits[-1]:
+            lines.append("")
+
+    return 0, "\n".join(lines)
+
 
 def branch_command(args):
     """
