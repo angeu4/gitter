@@ -36,3 +36,11 @@ Implements repository filesystem layout, HEAD pointer management and branch refe
 
 ## Index Layer
 Implements staging area abstraction with deterministic persistence.
+
+## Quality Gates
+- Ruff — Linting
+- Bandit — Security scanning
+- Pytest — Unit tests
+- Coverage enforced at ≥90%
+
+![Coverage](https://codecov.io/gh/angeu4/gitter/branch/main/graph/badge.svg)
