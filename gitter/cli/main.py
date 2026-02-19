@@ -24,6 +24,11 @@ COMMAND_REGISTRY = {
         "usage": "gitter status",
         "description": "Show repository status",
     },
+    "log": {
+        "handler": commands.log_command,
+        "usage": "gitter log",
+        "description": "Show commit history",
+    },
 
 }
 

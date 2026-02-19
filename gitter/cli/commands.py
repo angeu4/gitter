@@ -98,3 +98,29 @@ def status_command(args):
         output_lines.append("Working tree clean")
 
     return 0, "\n".join(output_lines)
+
+
+def log_command(args):
+    """
+    Show commit history.
+    """
+    try:
+        repo_root = find_repo_root(Path.cwd())
+    except RepoNotFoundError:
+        return 1, "Not a gitter repository"
+
+    service = RepositoryService(repo_root)
+    commits = service.get_log()
+
+    if not commits:
+        return 0, "No commits yet"
+
+    lines = []
+
+    for commit in commits:
+        lines.append(f"commit {commit['hash']}")
+        lines.append(f"Author: {commit['author']}")
+        lines.append(f"Message: {commit['message']}")
+        lines.append("")
+
+    return 0, "\n".join(lines).strip()

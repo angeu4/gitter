@@ -240,3 +240,49 @@ class RepositoryService:
             "untracked": sorted(untracked),
         }
 
+
+    # ------------------------------------------------------------------
+    # Log
+    # ------------------------------------------------------------------
+
+    def get_log(self):
+        """
+        Traverse commit history from HEAD backwards.
+
+        Returns:
+            List of commits in reverse chronological order.
+            Each entry is a dict containing:
+                - hash
+                - message
+                - author
+                - timestamp
+        """
+
+        commits = []
+
+        try:
+            branch = self._get_current_branch_name()
+            current_hash = self.refs.get_branch(branch)
+        except Exception:
+            return commits
+
+        while current_hash:
+            commit_path = self.layout.objects_dir / current_hash
+
+            if not commit_path.exists():
+                break
+
+            commit_dict = deserialize_dict(commit_path.read_bytes())
+
+            commits.append(
+                {
+                    "hash": current_hash,
+                    "message": commit_dict["message"],
+                    "author": commit_dict["author"],
+                    "timestamp": commit_dict["timestamp"],
+                }
+            )
+
+            current_hash = commit_dict.get("parent")
+
+        return commits

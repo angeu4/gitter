@@ -4,14 +4,14 @@ Git-like version control CLI tool built for engineering design evaluation.
 
 ## Development Setup
 
-python -m venv .venv
-source .venv/bin/activate
+`python -m venv .venv`
+`source .venv/bin/activate`
 
-pip install -e .
-pip install -r requirements-dev.txt
+`pip install -e .`
+`pip install -r requirements-dev.txt`
 
-## Run Tests
-pytest
+## Run Tests with code coverage
+`python -m pytest --cov=gitter`
 
 
 ## Continuous Integration
@@ -42,3 +42,38 @@ Implements staging area abstraction with deterministic persistence.
 - Bandit — Security scanning
 - Pytest — Unit tests
 - Coverage enforced at ≥90%
+
+## Supported Commands
+- `gitter init`
+- `gitter add <file>`
+- `gitter commit -m <message>`
+- `gitter status`
+- `gitter log`
+- `gitter help`
+- `gitter help <command>`
+
+### Example usage
+`$ gitter init`
+
+Initialized empty Gitter repository
+
+`$ echo "hello" > file.txt`
+`$ gitter add file.txt`
+
+Staged file.txt
+
+`$ gitter commit -m "initial commit"`
+
+Committed as <hash>
+
+`$ gitter status`
+
+Working tree clean
+
+`$ gitter log`
+
+commit <hash>
+
+Author: anonymous
+
+Message: initial commit
