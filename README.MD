@@ -33,3 +33,6 @@ Supports Blob, Tree and Commit object primitives.
 
 ## Repository Metadata Layer
 Implements repository filesystem layout, HEAD pointer management and branch reference storage.
+
+## Index Layer
+Implements staging area abstraction with deterministic persistence.
