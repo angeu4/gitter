@@ -4,50 +4,65 @@ from gitter.repository.layout import RepoLayout
 from gitter.repository.discovery import find_repo_root, RepoNotFoundError
 from gitter.repository.config import RepoConfig
 from gitter.service.repository_service import RepositoryService
+from gitter.service.exceptions import NothingToCommitError
 
 
-def init_command(path: Path):
+def init_command(args):
     """
     Initialize a new Gitter repository.
     """
-
-    layout = RepoLayout(path)
+    layout = RepoLayout(Path.cwd())
     layout.ensure_exists()
-
     RepoConfig(layout.config_file).write_default()
 
-    return "Initialized empty Gitter repository"
+    return 0, "Initialized empty Gitter repository"
 
 
-def add_command(file_path: str):
+def add_command(args):
     """
     Stage a file into the repository.
     """
+    if len(args) < 1:
+        return 1, "Usage: gitter add <file>"
 
     try:
         repo_root = find_repo_root(Path.cwd())
     except RepoNotFoundError:
-        raise RuntimeError("Not a gitter repository")
+        return 1, "Not a gitter repository"
 
     service = RepositoryService(repo_root)
 
-    service.stage_file(Path(file_path))
+    try:
+        service.stage_file(Path(args[0]))
+    except FileNotFoundError as exc:
+        return 1, f"File not found: {exc}"
 
-    return f"Staged {file_path}"
+    return 0, f"Staged {args[0]}"
 
 
-def commit_command(message: str, author: str = "anonymous"):
+def commit_command(args):
     """
     Create commit from staged files.
     """
+    if "-m" not in args:
+        return 1, "Usage: gitter commit -m <message>"
+
+    msg_index = args.index("-m") + 1
+    if msg_index >= len(args):
+        return 1, "Commit message missing"
+
+    message = args[msg_index]
 
     try:
         repo_root = find_repo_root(Path.cwd())
     except RepoNotFoundError:
-        raise RuntimeError("Not a gitter repository")
+        return 1, "Not a gitter repository"
 
     service = RepositoryService(repo_root)
 
-    commit_hash = service.commit(message, author)
+    try:
+        commit_hash = service.commit(message, "anonymous")
+    except NothingToCommitError:
+        return 1, "Nothing to commit"
 
-    return f"Committed as {commit_hash}"
+    return 0, f"Committed as {commit_hash}"
