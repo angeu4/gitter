@@ -20,10 +20,12 @@ def init_command(args):
 
 def add_command(args):
     """
-    Stage a file into the repository.
+    Stage one or more files.
+    Supports glob patterns.
     """
-    if len(args) < 1:
-        return 1, "Usage: gitter add <file>"
+
+    if not args:
+        return 1, "No file specified"
 
     try:
         repo_root = find_repo_root(Path.cwd())
@@ -32,12 +34,23 @@ def add_command(args):
 
     service = RepositoryService(repo_root)
 
-    try:
-        service.stage_file(Path(args[0]))
-    except FileNotFoundError as exc:
-        return 1, f"File not found: {exc}"
+    staged_any = False
 
-    return 0, f"Staged {args[0]}"
+    for pattern in args:
+        # Expand glob relative to repo root
+        matches = list(repo_root.glob(pattern))
+
+        for match in matches:
+            if match.is_file():
+                rel_path = match.relative_to(repo_root)
+                service.stage_file(Path(str(rel_path)))
+                staged_any = True
+
+    # If nothing matched, do nothing (spec compliant)
+    if not staged_any:
+        return 0, ""
+
+    return 0, ""
 
 
 def commit_command(args):

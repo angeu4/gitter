@@ -43,7 +43,7 @@ def test_commit_multiple_m(tmp_path, monkeypatch, capsys, run_cli):
 
     run_cli(monkeypatch, ["commit", "-m", "line1", "-m", "line2"])
 
-    exit_code = run_cli(monkeypatch, ["log"])
+    _ = run_cli(monkeypatch, ["log"])
     captured = capsys.readouterr()
 
     assert "line1" in captured.out
