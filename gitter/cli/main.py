@@ -29,7 +29,12 @@ COMMAND_REGISTRY = {
         "usage": "gitter log",
         "description": "Show commit history",
     },
-
+    "branch": {
+        "handler": commands.branch_command,
+        "usage": "gitter branch [<name>]",
+        "description": "List or create branches",
+    },
+    
 }
 
 

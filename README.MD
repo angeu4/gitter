@@ -49,6 +49,7 @@ Implements staging area abstraction with deterministic persistence.
 - `gitter commit -m <message>`
 - `gitter status`
 - `gitter log`
+- `gitter branch [<name>]`
 - `gitter help`
 - `gitter help <command>`
 
@@ -77,3 +78,9 @@ commit <hash>
 Author: anonymous
 
 Message: initial commit
+
+`$ gitter branch`
+
+`* main`
+
+`feature`

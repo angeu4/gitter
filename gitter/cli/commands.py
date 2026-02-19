@@ -124,3 +124,37 @@ def log_command(args):
         lines.append("")
 
     return 0, "\n".join(lines).strip()
+
+def branch_command(args):
+    """
+    List or create branches.
+    """
+
+    try:
+        repo_root = find_repo_root(Path.cwd())
+    except RepoNotFoundError:
+        return 1, "Not a gitter repository"
+
+    service = RepositoryService(repo_root)
+
+    # List branches
+    if not args:
+        branches = service.list_branches()
+        current = service._get_current_branch_name()
+
+        lines = []
+        for branch in branches:
+            prefix = "*" if branch == current else " "
+            lines.append(f"{prefix} {branch}")
+
+        return 0, "\n".join(lines)
+
+    # Create branch
+    name = args[0]
+
+    try:
+        service.create_branch(name)
+    except ValueError:
+        return 1, "Branch already exists"
+
+    return 0, f"Branch '{name}' created"

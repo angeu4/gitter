@@ -286,3 +286,36 @@ class RepositoryService:
             current_hash = commit_dict.get("parent")
 
         return commits
+
+
+    # ------------------------------------------------------------------
+    # Branch
+    # ------------------------------------------------------------------
+
+    def list_branches(self):
+        """
+        Return list of branch names.
+        """
+
+        branches = []
+        for path in self.layout.heads_dir.iterdir():
+            if path.is_file():
+                branches.append(path.name)
+
+        return sorted(branches)
+
+
+    def create_branch(self, name: str):
+        """
+        Create a new branch pointing to current HEAD commit.
+        """
+
+        branch_path = self.layout.heads_dir / name
+
+        if branch_path.exists():
+            raise ValueError("Branch already exists")
+
+        current_branch = self._get_current_branch_name()
+        current_commit = self.refs.get_branch(current_branch)
+
+        self.refs.set_branch(name, current_commit)
