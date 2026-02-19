@@ -1,97 +1,44 @@
 import sys
-
 from gitter.cli import commands
 
 
 COMMAND_REGISTRY = {
-    "init": {
-        "handler": commands.init_command,
-        "usage": "gitter init",
-        "description": "Initialize a new repository",
-    },
-    "add": {
-        "handler": commands.add_command,
-        "usage": "gitter add <file>",
-        "description": "Stage a file",
-    },
-    "commit": {
-        "handler": commands.commit_command,
-        "usage": "gitter commit -m <message>",
-        "description": "Create a commit from staged files",
-    },
-    "status": {
-        "handler": commands.status_command,
-        "usage": "gitter status",
-        "description": "Show repository status",
-    },
-    "log": {
-        "handler": commands.log_command,
-        "usage": "gitter log",
-        "description": "Show commit history",
-    },
-    "branch": {
-        "handler": commands.branch_command,
-        "usage": "gitter branch [<name>]",
-        "description": "List or create branches",
-    },
-    "reset": {
-        "handler": commands.reset_command,
-        "usage": "gitter reset HEAD~n",
-        "description": "Reset to head revision",
-    }
+    "init": {"handler": commands.init_command},
+    "add": {"handler": commands.add_command},
+    "commit": {"handler": commands.commit_command},
+    "status": {"handler": commands.status_command},
+    "log": {"handler": commands.log_command},
+    "branch": {"handler": commands.branch_command},
+    "reset": {"handler": commands.reset_command},
+    "checkout": {"handler": commands.checkout_command},
+    "help": {"handler": commands.help_command},
 }
-
-
-def print_global_help():
-    print("Gitter CLI\n")
-    print("Available commands:\n")
-    for name, meta in COMMAND_REGISTRY.items():
-        print(f"  {name:<10} {meta['description']}")
-    print("\nRun 'gitter help <command>' for more information.")
-
-
-def print_command_help(command):
-    meta = COMMAND_REGISTRY.get(command)
-    if not meta:
-        print(f"Unknown command '{command}'")
-        return 1
-
-    print(meta["usage"])
-    print()
-    print(meta["description"])
-    return 0
 
 
 def main():
     args = sys.argv[1:]
 
+    # No args → print banner + help
     if not args:
-        print_global_help()
-        sys.exit(0)
+        print("Gitter CLI\n")
+        exit_code, message = commands.help_command([])
+        if message:
+            print(message)
+        sys.exit(exit_code)
 
     command = args[0]
-
-    if command == "help":
-        if len(args) == 1:
-            print_global_help()
-            sys.exit(0)
-        else:
-            exit_code = print_command_help(args[1])
-            sys.exit(exit_code)
-
     meta = COMMAND_REGISTRY.get(command)
 
     if not meta:
-        print(f"Unknown command '{command}'")
+        print(f"Unknown command {command}")
         sys.exit(1)
 
     handler = meta["handler"]
-
     exit_code, message = handler(args[1:])
-    
+
     if message:
         print(message)
-    
+
     sys.exit(exit_code)
 
 

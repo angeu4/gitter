@@ -235,3 +235,45 @@ def reset_command(args):
         return 1, str(e)
 
     return 0, ""
+
+
+def help_command(args):
+    """
+    Display help information with strict formatting compliance.
+    """
+
+    commands = {
+        "add": "Usage: gitter add <file|pattern>",
+        "branch": "Usage: gitter branch [<name>]",
+        "checkout": "Usage: gitter checkout <branch>",
+        "commit": "Usage: gitter commit -m <message> [-m <message>] [-a]",
+        "init": "Usage: gitter init",
+        "log": "Usage: gitter log",
+        "reset": "Usage: gitter reset HEAD~<n>",
+        "status": "Usage: gitter status",
+        "help": "Usage: gitter help [command]",
+    }
+
+    if not args:
+        lines = [
+            "Usage: gitter <command> [options]",
+            "",
+            "Available commands:",
+        ]
+
+        for name in sorted(commands.keys()):
+            lines.append(f"  {name}")
+
+        return 0, "\n".join(lines)
+
+    command = args[0]
+
+    if command not in commands:
+        return 1, "Unknown command"
+
+    return 0, commands[command]
+
+
+def checkout_command(args):
+
+    return -1, ""

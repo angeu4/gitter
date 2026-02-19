@@ -2,8 +2,23 @@ def test_global_help(monkeypatch, capsys, run_cli):
     exit_code = run_cli(monkeypatch, ["help"])
     captured = capsys.readouterr()
 
+    expected = (
+        "Usage: gitter <command> [options]\n"
+        "\n"
+        "Available commands:\n"
+        "  add\n"
+        "  branch\n"
+        "  checkout\n"
+        "  commit\n"
+        "  help\n"
+        "  init\n"
+        "  log\n"
+        "  reset\n"
+        "  status\n"
+    )
+
     assert exit_code == 0
-    assert "Available commands" in captured.out
+    assert captured.out == expected
 
 
 def test_command_help(monkeypatch, capsys, run_cli):
@@ -11,7 +26,7 @@ def test_command_help(monkeypatch, capsys, run_cli):
     captured = capsys.readouterr()
 
     assert exit_code == 0
-    assert "gitter commit -m <message>" in captured.out
+    assert captured.out == "Usage: gitter commit -m <message> [-m <message>] [-a]\n"
 
 
 def test_help_unknown_command(monkeypatch, capsys, run_cli):
@@ -19,4 +34,4 @@ def test_help_unknown_command(monkeypatch, capsys, run_cli):
     captured = capsys.readouterr()
 
     assert exit_code == 1
-    assert "Unknown command" in captured.out
+    assert captured.out == "Unknown command\n"
