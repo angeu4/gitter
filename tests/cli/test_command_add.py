@@ -1,7 +1,4 @@
-from tests.cli.conftest import run_cli
-
-
-def test_add_without_repo_fails(tmp_path, monkeypatch, capsys):
+def test_add_without_repo_fails(tmp_path, monkeypatch, capsys, run_cli):
     monkeypatch.chdir(tmp_path)
 
     exit_code = run_cli(monkeypatch, ["add", "file.txt"])

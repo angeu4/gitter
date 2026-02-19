@@ -1,7 +1,4 @@
-from tests.cli.conftest import run_cli
-
-
-def test_commit_without_staging(tmp_path, monkeypatch, capsys):
+def test_commit_without_staging(tmp_path, monkeypatch, capsys, run_cli):
     monkeypatch.chdir(tmp_path)
 
     run_cli(monkeypatch, ["init"])
@@ -13,15 +10,15 @@ def test_commit_without_staging(tmp_path, monkeypatch, capsys):
     assert exit_code == 1
     assert "Nothing to commit" in captured.out
 
-def test_missing_commit_message(monkeypatch, capsys):
+def test_missing_commit_message(monkeypatch, capsys, run_cli):
     exit_code = run_cli(monkeypatch, ["commit"])
 
     captured = capsys.readouterr()
 
     assert exit_code == 1
-    assert "Usage" in captured.out
+    assert "Commit message missing" in captured.out
 
-def test_full_add_and_commit_flow(tmp_path, monkeypatch, capsys):
+def test_full_add_and_commit_flow(tmp_path, monkeypatch, capsys, run_cli):
     monkeypatch.chdir(tmp_path)
 
     # init

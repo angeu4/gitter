@@ -1,7 +1,4 @@
-from tests.cli.conftest import run_cli
-
-
-def test_status_untracked(tmp_path, monkeypatch, capsys):
+def test_status_untracked(tmp_path, monkeypatch, capsys, run_cli):
     monkeypatch.chdir(tmp_path)
 
     run_cli(monkeypatch, ["init"])
@@ -16,7 +13,7 @@ def test_status_untracked(tmp_path, monkeypatch, capsys):
     assert "Untracked" in captured.out
     assert "file.txt" in captured.out
 
-def test_status_staged(tmp_path, monkeypatch, capsys):
+def test_status_staged(tmp_path, monkeypatch, capsys, run_cli):
     monkeypatch.chdir(tmp_path)
 
     run_cli(monkeypatch, ["init"])
@@ -32,7 +29,7 @@ def test_status_staged(tmp_path, monkeypatch, capsys):
     assert exit_code == 0
     assert "Staged" in captured.out
 
-def test_status_clean(tmp_path, monkeypatch, capsys):
+def test_status_clean(tmp_path, monkeypatch, capsys, run_cli):
     monkeypatch.chdir(tmp_path)
 
     run_cli(monkeypatch, ["init"])

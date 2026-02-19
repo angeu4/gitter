@@ -103,7 +103,8 @@ class RepositoryService:
     # Commit
     # ------------------------------------------------------------------
 
-    def commit(self, message: str, author: str) -> str:
+    def commit(self, message: str, author: str, auto_stage: bool = False):
+
         """
         Create commit from current index state.
 
@@ -113,6 +114,9 @@ class RepositoryService:
         Raises:
             NothingToCommitError: If index is empty.
         """
+
+        if auto_stage:
+            self._auto_stage_tracked_changes()
 
         index = self.index_store.load()
 
@@ -150,6 +154,57 @@ class RepositoryService:
         self.index_store.save(Index())
 
         return commit_hash
+
+    def _auto_stage_tracked_changes(self):
+        """
+        Stage modified and deleted tracked files.
+        Does NOT stage untracked files.
+        """
+
+        index = self.index_store.load()
+
+        # Load HEAD tree
+        tracked = {}
+
+        try:
+            branch = self._get_current_branch_name()
+            commit_hash = self.refs.get_branch(branch)
+
+            if commit_hash:
+                commit_path = self.layout.objects_dir / commit_hash
+                commit_dict = deserialize_dict(commit_path.read_bytes())
+
+                tree_hash = commit_dict["tree"]
+                tree_path = self.layout.objects_dir / tree_hash
+                tree_dict = deserialize_dict(tree_path.read_bytes())
+
+                tracked = tree_dict.get("entries", {})
+        except Exception:
+            tracked = {}
+
+        for path_str, blob_hash in tracked.items():
+            path = self.repo_root / path_str
+
+            # File deleted
+            if not path.exists():
+                index.entries[path_str] = None
+                continue
+
+            # File modified
+            current_content = path.read_bytes()
+
+            blob_data = {
+                "type": "blob",
+                "content": current_content.decode("utf-8"),
+            }
+
+            current_hash = sha1_hash(serialize_dict(blob_data))
+
+            if current_hash != blob_hash:
+                index.entries[path_str] = current_hash
+
+        self.index_store.save(index)
+
 
     # ------------------------------------------------------------------
     # Internal Helpers

@@ -1,7 +1,4 @@
-from tests.cli.conftest import run_cli
-
-
-def test_global_help(monkeypatch, capsys):
+def test_global_help(monkeypatch, capsys, run_cli):
     exit_code = run_cli(monkeypatch, ["help"])
     captured = capsys.readouterr()
 
@@ -9,7 +6,7 @@ def test_global_help(monkeypatch, capsys):
     assert "Available commands" in captured.out
 
 
-def test_command_help(monkeypatch, capsys):
+def test_command_help(monkeypatch, capsys, run_cli):
     exit_code = run_cli(monkeypatch, ["help", "commit"])
     captured = capsys.readouterr()
 
@@ -17,7 +14,7 @@ def test_command_help(monkeypatch, capsys):
     assert "gitter commit -m <message>" in captured.out
 
 
-def test_help_unknown_command(monkeypatch, capsys):
+def test_help_unknown_command(monkeypatch, capsys, run_cli):
     exit_code = run_cli(monkeypatch, ["help", "unknown"])
     captured = capsys.readouterr()
 

@@ -1,7 +1,4 @@
-from tests.cli.conftest import run_cli
-
-
-def test_branch_list(tmp_path, monkeypatch, capsys):
+def test_branch_list(tmp_path, monkeypatch, capsys, run_cli):
     monkeypatch.chdir(tmp_path)
 
     run_cli(monkeypatch, ["init"])
@@ -13,7 +10,7 @@ def test_branch_list(tmp_path, monkeypatch, capsys):
     assert "* main" in captured.out
 
 
-def test_branch_create(tmp_path, monkeypatch, capsys):
+def test_branch_create(tmp_path, monkeypatch, capsys, run_cli):
     monkeypatch.chdir(tmp_path)
 
     run_cli(monkeypatch, ["init"])
@@ -30,7 +27,7 @@ def test_branch_create(tmp_path, monkeypatch, capsys):
     assert "feature" in captured.out
 
 
-def test_branch_duplicate(tmp_path, monkeypatch, capsys):
+def test_branch_duplicate(tmp_path, monkeypatch, capsys, run_cli):
     monkeypatch.chdir(tmp_path)
 
     run_cli(monkeypatch, ["init"])

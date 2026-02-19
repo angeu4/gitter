@@ -43,15 +43,29 @@ def add_command(args):
 def commit_command(args):
     """
     Create commit from staged files.
+    Supports -m and -am.
     """
-    if "-m" not in args:
-        return 1, "Usage: gitter commit -m <message>"
 
-    msg_index = args.index("-m") + 1
-    if msg_index >= len(args):
+    auto_stage = False
+    messages = []
+
+    i = 0
+    while i < len(args):
+        if args[i] == "-a":
+            auto_stage = True
+            i += 1
+        elif args[i] == "-m":
+            if i + 1 >= len(args):
+                return 1, "Commit message missing"
+            messages.append(args[i + 1])
+            i += 2
+        else:
+            return 1, "Invalid commit arguments"
+
+    if not messages:
         return 1, "Commit message missing"
 
-    message = args[msg_index]
+    full_message = "\n\n".join(messages)
 
     try:
         repo_root = find_repo_root(Path.cwd())
@@ -61,7 +75,11 @@ def commit_command(args):
     service = RepositoryService(repo_root)
 
     try:
-        commit_hash = service.commit(message, "anonymous")
+        commit_hash = service.commit(
+            full_message,
+            "user",
+            auto_stage=auto_stage,
+        )
     except NothingToCommitError:
         return 1, "Nothing to commit"
 

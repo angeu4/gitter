@@ -1,7 +1,4 @@
-from tests.cli.conftest import run_cli
-
-
-def test_log_no_commits(tmp_path, monkeypatch, capsys):
+def test_log_no_commits(tmp_path, monkeypatch, capsys, run_cli):
     monkeypatch.chdir(tmp_path)
 
     run_cli(monkeypatch, ["init"])
@@ -12,7 +9,7 @@ def test_log_no_commits(tmp_path, monkeypatch, capsys):
     assert exit_code == 0
     assert "No commits yet" in captured.out
 
-def test_log_single_commit(tmp_path, monkeypatch, capsys):
+def test_log_single_commit(tmp_path, monkeypatch, capsys, run_cli):
     monkeypatch.chdir(tmp_path)
 
     run_cli(monkeypatch, ["init"])
@@ -30,7 +27,7 @@ def test_log_single_commit(tmp_path, monkeypatch, capsys):
     assert "commit" in captured.out
     assert "initial" in captured.out
 
-def test_log_multiple_commits(tmp_path, monkeypatch, capsys):
+def test_log_multiple_commits(tmp_path, monkeypatch, capsys, run_cli):
     monkeypatch.chdir(tmp_path)
 
     run_cli(monkeypatch, ["init"])
