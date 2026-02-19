@@ -1,3 +1,6 @@
+import re
+
+
 def test_commit_without_staging(tmp_path, monkeypatch, capsys, run_cli):
     monkeypatch.chdir(tmp_path)
 
@@ -57,3 +60,30 @@ def test_commit_status_regex(monkeypatch, capsys, run_cli, tmp_path):
     captured = capsys.readouterr()
 
     assert captured.out == "Working tree clean\n"
+
+
+def test_commit_success_regex(monkeypatch, capsys, run_cli, tmp_path):
+    monkeypatch.chdir(tmp_path)
+
+    run_cli(monkeypatch, ["init"])
+    capsys.readouterr()
+
+    (tmp_path / "file.txt").write_text("x")
+    run_cli(monkeypatch, ["add", "file.txt"])
+    capsys.readouterr()
+
+    exit_code = run_cli(monkeypatch, ["commit", "-m", "initial commit"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+
+    pattern = r"^Committed as [a-f0-9]{40}\n$"
+    assert re.fullmatch(pattern, captured.out)
+
+
+def test_commit_missing_message_regex(monkeypatch, capsys, run_cli):
+    exit_code = run_cli(monkeypatch, ["commit"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert re.fullmatch(r"Commit message missing\n", captured.out)

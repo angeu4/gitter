@@ -193,15 +193,11 @@ class RepositoryService:
             # File modified
             current_content = path.read_bytes()
 
-            blob_data = {
-                "type": "blob",
-                "content": current_content.decode("utf-8"),
-            }
+            blob = Blob(current_content)
+            new_hash = self.object_store.store(blob)
 
-            current_hash = sha1_hash(serialize_dict(blob_data))
-
-            if current_hash != blob_hash:
-                index.entries[path_str] = current_hash
+            if new_hash != blob_hash:
+                index.entries[path_str] = new_hash
 
         self.index_store.save(index)
 
@@ -432,3 +428,58 @@ class RepositoryService:
 
         return target_hash
 
+    # ------------------------------------------------------------------
+    # Checkout
+    # ------------------------------------------------------------------
+
+    def checkout_branch(self, name: str):
+        """
+        Switch HEAD to another branch and update working tree.
+
+        Raises:
+            ValueError if branch does not exist.
+        """
+
+        # Ensure branch exists
+        branch_path = self.layout.heads_dir / name
+        if not branch_path.exists():
+            raise ValueError("Branch does not exist")
+
+        # Get commit hash of target branch
+        target_commit = self.refs.get_branch(name)
+
+        # Update HEAD reference
+        self.head.set_branch(name)
+
+        # If branch has no commits yet, nothing to restore
+        if not target_commit:
+            return
+
+        # Load commit
+        commit_path = self.layout.objects_dir / target_commit
+        commit_dict = deserialize_dict(commit_path.read_bytes())
+
+        tree_hash = commit_dict["tree"]
+
+        # Load tree
+        tree_path = self.layout.objects_dir / tree_hash
+        tree_dict = deserialize_dict(tree_path.read_bytes())
+
+        entries = tree_dict.get("entries", {})
+
+        # Clear working directory files (except .gitter)
+        for path in self.repo_root.rglob("*"):
+            if path.is_file() and ".gitter" not in path.parts:
+                path.unlink()
+
+        # Restore files from tree
+        for path_str, blob_hash in entries.items():
+            blob_path = self.layout.objects_dir / blob_hash
+            blob_dict = deserialize_dict(blob_path.read_bytes())
+
+            file_path = self.repo_root / path_str
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.write_text(blob_dict["content"])
+
+        # Clear index after checkout
+        self.index_store.save(Index())

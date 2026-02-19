@@ -68,30 +68,50 @@ def add_command(args):
 
 def commit_command(args):
     """
-    Create commit from staged files.
-    Supports -m and -am.
+    Commit staged changes.
+    Supports:
+        -m <message>
+        -a
+        -am
+        -ma
     """
 
+    message_parts = []
     auto_stage = False
-    messages = []
 
     i = 0
     while i < len(args):
-        if args[i] == "-a":
-            auto_stage = True
-            i += 1
-        elif args[i] == "-m":
-            if i + 1 >= len(args):
-                return 1, "Commit message missing"
-            messages.append(args[i + 1])
-            i += 2
-        else:
-            return 1, "Invalid commit arguments"
+        arg = args[i]
 
-    if not messages:
+        # Handle combined flags like -am or -ma
+        if arg.startswith("-") and len(arg) > 2:
+            flags = arg[1:]
+            for flag in flags:
+                if flag == "a":
+                    auto_stage = True
+                elif flag == "m":
+                    i += 1
+                    if i >= len(args):
+                        return 1, "Commit message missing"
+                    message_parts.append(args[i])
+                else:
+                    return 1, "Invalid option"
+        elif arg == "-a":
+            auto_stage = True
+        elif arg == "-m":
+            i += 1
+            if i >= len(args):
+                return 1, "Commit message missing"
+            message_parts.append(args[i])
+        else:
+            return 1, "Invalid option"
+
+        i += 1
+
+    if not message_parts:
         return 1, "Commit message missing"
 
-    full_message = "\n\n".join(messages)
+    message = " ".join(message_parts)
 
     try:
         repo_root = find_repo_root(Path.cwd())
@@ -102,8 +122,8 @@ def commit_command(args):
 
     try:
         commit_hash = service.commit(
-            full_message,
-            "user",
+            message=message,
+            author="user",
             auto_stage=auto_stage,
         )
     except NothingToCommitError:
@@ -364,5 +384,25 @@ def help_command(args):
 
 
 def checkout_command(args):
+    """
+    Switch branches.
+    """
 
-    return -1, ""
+    if not args:
+        return 1, "Branch name required"
+
+    branch_name = args[0]
+
+    try:
+        repo_root = find_repo_root(Path.cwd())
+    except RepoNotFoundError:
+        return 1, "Not a gitter repository"
+
+    service = RepositoryService(repo_root)
+
+    try:
+        service.checkout_branch(branch_name)
+    except ValueError:
+        return 1, "Branch does not exist"
+
+    return 0, f"Switched to branch '{branch_name}'"
