@@ -34,7 +34,11 @@ COMMAND_REGISTRY = {
         "usage": "gitter branch [<name>]",
         "description": "List or create branches",
     },
-    
+    "reset": {
+        "handler": commands.reset_command,
+        "usage": "gitter reset HEAD~n",
+        "description": "Reset to head revision",
+    }
 }
 
 

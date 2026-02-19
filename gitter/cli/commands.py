@@ -197,3 +197,24 @@ def branch_command(args):
         return 1, "Branch already exists"
 
     return 0, f"Branch '{name}' created"
+
+
+def reset_command(args):
+    if len(args) != 1:
+        return 1, "Usage: gitter reset HEAD~<n>"
+
+    revision = args[0]
+
+    try:
+        repo_root = find_repo_root(Path.cwd())
+    except RepoNotFoundError:
+        return 1, "Not a gitter repository"
+
+    service = RepositoryService(repo_root)
+
+    try:
+        service.reset_head(revision)
+    except ValueError as e:
+        return 1, str(e)
+
+    return 0, ""

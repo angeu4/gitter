@@ -374,3 +374,61 @@ class RepositoryService:
         current_commit = self.refs.get_branch(current_branch)
 
         self.refs.set_branch(name, current_commit)
+
+
+    # ------------------------------------------------------------------
+    # Reset
+    # ------------------------------------------------------------------
+
+    def reset_head(self, revision: str) -> str:
+        """
+        Reset current branch to HEAD~n.
+
+        Only supports syntax: HEAD~<n>
+
+        Returns:
+            Target commit hash.
+
+        Raises:
+            ValueError if revision invalid or reset not possible.
+        """
+
+        if not revision.startswith("HEAD~"):
+            raise ValueError("Invalid revision format")
+
+        try:
+            steps = int(revision.split("~")[1])
+        except (IndexError, ValueError):
+            raise ValueError("Invalid revision format")
+
+        if steps <= 0:
+            raise ValueError("Invalid revision format")
+
+        branch_name = self._get_current_branch_name()
+        current_hash = self.refs.get_branch(branch_name)
+
+        if not current_hash:
+            raise ValueError("No commits to reset")
+
+        target_hash = current_hash
+
+        for _ in range(steps):
+            commit_path = self.layout.objects_dir / target_hash
+
+            if not commit_path.exists():
+                raise ValueError("Invalid commit history")
+
+            commit_dict = deserialize_dict(commit_path.read_bytes())
+
+            parent_hash = commit_dict.get("parent")
+
+            if not parent_hash:
+                raise ValueError("Cannot reset beyond initial commit")
+
+            target_hash = parent_hash
+
+        # Move branch reference
+        self.refs.set_branch(branch_name, target_hash)
+
+        return target_hash
+
