@@ -386,12 +386,13 @@ def help_command(args):
 def checkout_command(args):
     """
     Switch branches.
+    Supports:
+        gitter checkout <branch>
+        gitter checkout -b <branch>
     """
 
     if not args:
         return 1, "Branch name required"
-
-    branch_name = args[0]
 
     try:
         repo_root = find_repo_root(Path.cwd())
@@ -399,6 +400,24 @@ def checkout_command(args):
         return 1, "Not a gitter repository"
 
     service = RepositoryService(repo_root)
+
+    # checkout -b <branch>
+    if args[0] == "-b":
+        if len(args) < 2:
+            return 1, "Branch name required"
+
+        branch_name = args[1]
+
+        try:
+            service.create_branch(branch_name)
+            service.checkout_branch(branch_name)
+        except ValueError:
+            return 1, "Branch already exists"
+
+        return 0, f"Switched to a new branch '{branch_name}'"
+
+    # checkout <branch>
+    branch_name = args[0]
 
     try:
         service.checkout_branch(branch_name)
