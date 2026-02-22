@@ -51,7 +51,8 @@ def add_command(args):
 
     for pattern in args:
         # Expand glob relative to repo root
-        matches = list(repo_root.glob(pattern))
+        # matches = list(repo_root.glob(pattern))
+        matches = list(repo_root.rglob(pattern))
 
         for match in matches:
             if match.is_file():
